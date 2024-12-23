@@ -1,0 +1,34 @@
+@media (min-width: 1024px) {
+  .itemsTable {
+    flex: 1;
+  }
+}
+
+@media (max-width: 1024px) {
+  .itemsTable {
+    flex: 0;
+  }
+}
+
+.title {
+  display: flex;
+  flex-direction: row;
+  gap: 14px;
+  align-items: center;
+
+  .pi {
+    margin-top: 2px;
+    font-size: 2.2rem;
+  }
+}
+
+.addItemsButton {
+  min-width: 160px;
+  align-self: flex-end;
+}
+
+.itemsTable {
+  width: 100%;
+  height: calc(100% - 300px);
+  table-layout: fixed;
+}

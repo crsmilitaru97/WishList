@@ -1,1 +1,63 @@
-/* You can add global styles to this file, and also import other style files */
+body {
+  background-color: var(--ground-background) !important;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+}
+
+@media (min-width: 1024px) {
+  p-card {
+    width: 60%;
+    height: 80%;
+  }
+}
+
+@media (max-width: 1024px) {
+  p-card {
+    width: 100%;
+    height: 100%;
+
+    .p-card-content {
+      justify-content: start !important;
+    }
+  }
+}
+
+.p-card {
+  height: 100%;
+  width: 100%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+
+  .p-card-body {
+    height: 100%;
+    width: 100%;
+
+    .p-card-content {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: space-between;
+    }
+  }
+}
+
+.p-datatable {
+  height: 100%;
+
+  .p-datatable-table-container {
+    overflow: auto;
+    height: 100%;
+  }
+
+  .p-datatable-tbody {
+    overflow: auto;
+    height: 24%;
+  }
+}
