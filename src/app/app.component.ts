@@ -23,6 +23,11 @@ export class AppComponent implements OnInit {
   ];
 
   ngOnInit() {
+    const darkMode = localStorage.getItem('darkMode');
+    if (darkMode == undefined || darkMode === 'enabled') {
+      document.querySelector('html')!.classList.add('app-dark');
+    }
+
     if (localStorage.getItem('name')) {
       this.name = localStorage.getItem('name') ?? '';
     } else {
@@ -126,5 +131,12 @@ export class AppComponent implements OnInit {
   onEnterName() {
     localStorage.setItem('name', this.name);
     this.nameDialogVisible = false;
+  }
+
+  toggleDarkMode() {
+    const element = document.querySelector('html')!;
+    element.classList.toggle('app-dark');
+    const isDarkMode = element.classList.contains('app-dark');
+    localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
   }
 }

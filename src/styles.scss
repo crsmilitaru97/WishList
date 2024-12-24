@@ -16,23 +16,35 @@ body {
     width: 60%;
     height: 80%;
   }
+
+  .dialog {
+    width: 25%;
+  }
 }
 
 @media (max-width: 1024px) {
   p-card {
     width: 100%;
     height: 100%;
+  }
 
-    .p-card-content {
-      justify-content: start !important;
-    }
+  .dialog {
+    width: 100%;
+  }
+
+  .p-card-content {
+    justify-content: start !important;
+  }
+
+  .p-card-body {
+    padding-inline: 0.4rem !important;
   }
 }
 
 .p-card {
   height: 100%;
   width: 100%;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.1) !important;
 
   .p-card-body {
     height: 100%;
@@ -48,6 +60,11 @@ body {
   }
 }
 
+.p-dialog {
+  position: absolute;
+  top: 10%;
+}
+
 .p-datatable {
   height: 100%;
 
@@ -60,4 +77,25 @@ body {
     overflow: auto;
     height: 24%;
   }
+}
+
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 20px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--p-datatable-header-cell-background);
+  border-radius: 20px;
+  border: 6px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--p-form-field-disabled-background);
 }

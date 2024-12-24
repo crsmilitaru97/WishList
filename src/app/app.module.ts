@@ -32,7 +32,14 @@ import { AppComponent } from './app.component';
     CardModule,
     SelectModule
   ],
-  providers: [ providePrimeNG({ theme: { preset: Lara } }) ],
+  providers: [providePrimeNG({
+    theme: {
+      preset: Lara,
+      options: {
+        darkModeSelector: '.app-dark'
+      }
+    }
+  })],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

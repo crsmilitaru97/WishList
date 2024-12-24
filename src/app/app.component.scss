@@ -8,6 +8,20 @@
   .itemsTable {
     flex: 0;
   }
+
+  .title {
+    align-self: center;
+  }
+
+  .itemsTable {
+    margin-bottom: 1rem;
+  }
+}
+
+.dark-mode-toggle {
+  position: fixed;
+  top: 15px;
+  right: 15px;
 }
 
 .title {
