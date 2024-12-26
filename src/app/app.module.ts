@@ -12,6 +12,7 @@ import { FloatLabel } from 'primeng/floatlabel';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
+import { TabsModule } from 'primeng/tabs';
 import { AppComponent } from './app.component';
 
 @NgModule({
@@ -30,7 +31,8 @@ import { AppComponent } from './app.component';
     DialogModule,
     TableModule,
     CardModule,
-    SelectModule
+    SelectModule,
+    TabsModule
   ],
   providers: [providePrimeNG({
     theme: {

@@ -18,9 +18,10 @@ export class AppComponent implements OnInit {
   db!: firebase.database.Database;
   statusOptions = [
     { label: 'Nou', value: 'New' },
-    { label: 'Păstrat', value: 'Pending' },
+    { label: 'Ocupat', value: 'Pending' },
     { label: 'Luat', value: 'Done' }
   ];
+  selectedTab: any = '0';
 
   ngOnInit() {
     const darkMode = localStorage.getItem('darkMode');
@@ -94,15 +95,36 @@ export class AppComponent implements OnInit {
     });
   }
 
+  getFilteredItems() {
+    switch (this.selectedTab) {
+      case '0':
+        return this.items
+          .filter((item: any) => item.user !== this.name && item.status !== 'Done')
+          .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()).reverse();
+      case '1':
+        return this.items
+          .filter((item: any) => item.user === this.name)
+          .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()).reverse();
+      case '2':
+        return this.items
+          .filter((item: any) => item.user !== this.name && item.status === 'Done')
+          .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()).reverse();
+      default:
+        return [];
+    }
+  }
+
   addItem() {
     if (this.newItemName.trim()) {
       const newItem = {
         name: this.newItemName,
         user: this.name,
-        status: 'New'
+        status: 'New',
+        date: new Date().toISOString()
       };
       this.saveItem(newItem);
       newItem.status = '-';
+      this.selectedTab = '1';
     }
   }
 

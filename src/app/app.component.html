@@ -6,34 +6,45 @@
       <i class="pi pi-gift"></i>
       <h2 class="m-0">WishList</h2>
     </div>
-    <p-table class="itemsTable" [value]="items" scrollable="true">
-      <ng-template pTemplate="header">
-        <tr>
-          <th style="width: 70%;">Dorință</th>
-          <th style="width: 20%;">Pentru</th>
-          <th style="width: 10%;">Status</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-item>
-        <tr>
-          <td>{{ item.name }}</td>
-          <td>{{ item.user }}</td>
-          <td class="text-center">
-            <p-select *ngIf="item.user != name" [options]="statusOptions" [(ngModel)]="item.status"
-              (onChange)="updateStatus(item)" placeholder="Selectează status" appendTo="body"
-              [ngStyle]="{'min-width': '115px'}" [disabled]="item.status != 'New' && item.statusBy != name">
-            </p-select>
-            <button *ngIf="item.user == name" class="p-button-danger" pButton icon="pi pi-trash"
-              (click)="deleteItem(item)"></button>
-          </td>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="3" class="text-center p-4">{{'Încă nu au fost adăugate cadouri :)'}}</td>
-        </tr>
-      </ng-template>
-    </p-table>
+
+    <p-tabs [(value)]="selectedTab" class="h-100">
+      <p-tablist>
+        <p-tab value="0">Disponibile</p-tab>
+        <p-tab value="1">Personale</p-tab>
+        <p-tab value="2">Luate</p-tab>
+      </p-tablist>
+      <p-tabpanels class="p-0">
+        <p-table class="itemsTable" [value]="getFilteredItems()" scrollable="true">
+          <ng-template pTemplate="header" let-item>
+            <tr>
+              <th style="width: 85%;">Dorință</th>
+              <th style="width: 15%;">Pentru</th>
+              <th *ngIf="selectedTab == '1'" style="min-width: 148px;">Acțiuni</th>
+              <th *ngIf="selectedTab == '0'" style="min-width: 148px;">Status</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-item>
+            <tr>
+              <td>{{ item.name }}</td>
+              <td>{{ item.user }}</td>
+              <td *ngIf="item.status != 'Done'" style="min-width: 148px;" class="text-center">
+                <p-select *ngIf="item.user != name" [options]="statusOptions" [(ngModel)]="item.status"
+                  (onChange)="updateStatus(item)" placeholder="Selectează status" appendTo="body"
+                  [ngStyle]="{'min-width': '115px'}" [disabled]="item.status == 'Pending' && item.statusBy != name">
+                </p-select>
+                <button *ngIf="item.user == name" class="p-button-danger" pButton icon="pi pi-trash"
+                  (click)="deleteItem(item)"></button>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="3" class="text-center p-4">Încă nu au fost adăugate cadouri :)</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-tabpanels>
+    </p-tabs>
 
     <button class="mt-4 addItemsButton" pButton label="Adaugă" icon="pi pi-plus" (click)="showDialog()"></button>
   </p-card>
