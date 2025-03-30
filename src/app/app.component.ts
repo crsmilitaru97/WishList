@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/database';
+import { firebaseConfig } from './firebase-config';
 
 @Component({
   selector: 'app-root',
@@ -39,15 +40,6 @@ export class AppComponent implements OnInit {
   }
 
   initializeFirebase() {
-    const firebaseConfig = {
-      apiKey: "AIzaSyCCnHZNEzSqcL59wbEtg8ABYz9mVja2_us",
-      authDomain: "wishlist-e829a.firebaseapp.com",
-      databaseURL: "https://wishlist-e829a-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "wishlist-e829a",
-      storageBucket: "wishlist-e829a.firebasestorage.app",
-      messagingSenderId: "533375747230",
-      appId: "1:533375747230:web:fed6fd3d02a7a39e12e78f"
-    };
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
     }
