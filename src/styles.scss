@@ -35,14 +35,16 @@
 }
 
 html {
-  background-color: var(--ground-background, var(--bs-body-bg, #f3f4f6)) !important;
+  background-color: black !important;
 }
 
 body {
   height: 100dvh;
   min-height: 100dvh;
   width: 100vw;
-  overflow: hidden;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: auto;
   position: relative;
   background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
   background-size: 400% 400%;
@@ -63,12 +65,12 @@ body {
 }
 
 .page {
+  height: 100%;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 100vw;
-  height: 100vh;
   position: relative;
   z-index: var(--z-content);
   box-sizing: border-box;

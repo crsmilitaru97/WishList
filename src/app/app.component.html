@@ -1,7 +1,7 @@
 <div class="page">
   @if(!userDialogVisible) {
   <p-card>
-    <div class="title mb-4">
+    <div class="title">
       <div class="logo">
         <img class="logo-img" src="assets/icons/Gift.webp" />
         <h3 class="m-0">WishList</h3>
@@ -77,7 +77,7 @@
                 <button class="p-button-danger" pButton icon="pi pi-trash" (click)="deleteItem(item)"></button>
                 }
                 @if (selectedTab=='2') {
-                {{ item.statusDate | date:'dd.MM.yyyy' }}
+                <div class="text-muted small">{{ item.statusDate | date:'dd.MM.yyyy' }}</div>
                 }
               </div>
             </div>
@@ -119,13 +119,13 @@
     [resizable]="false" [closable]="true" [draggable]="false">
     <div class="mt-4 mb-2">
       <p-floatlabel class="w-100">
-        <textarea #inputGift pTextarea class="w-100" minlength="3" [(ngModel)]="newItemName"
-          placeholder="Scrie ce iți dorești..." focusOnShow required></textarea>
+        <textarea pTextarea class="w-100" minlength="3" [(ngModel)]="newItemName" placeholder="Scrie ce iți dorești..."
+          required></textarea>
       </p-floatlabel>
     </div>
     <ng-template #footer>
       <button pButton label="Adaugă" icon="pi pi-check" type="submit" (click)="saveItem()"
-        [disabled]="inputGift.value.length < 3"></button>
+        [disabled]="newItemName.length < 3"></button>
     </ng-template>
 
     @if (isSavingItem) {
@@ -136,27 +136,27 @@
   </p-dialog>
 
   <p-dialog styleClass="dialog" header="Cine ești?" [(visible)]="userDialogVisible" [modal]="true" [closable]="false"
-    [draggable]="false" [resizable]="false" [focusOnShow]="false">
+    [draggable]="false" [resizable]="false" [focusOnShow]="!isMobile">
     <div class="user-dialog-content">
       <img class="person-img" src="assets/icons/Person.gif" />
-      <div class="form">
+      <div class="user-form">
         <p-floatlabel class="w-100">
           <input class="w-100" type="text" pInputText minlength="3" [(ngModel)]="currentUser.fullname"
-            autocomplete="username" autofocus required />
+            autocomplete="given-name" required />
           <label>Nume</label>
         </p-floatlabel>
         <p-floatlabel class="w-100 mt-4">
-          <input class="w-100" type="text" pInputText [(ngModel)]="currentUser.email" autocomplete="email"
+          <input class="w-100" type="email" pInputText [(ngModel)]="currentUser.email" autocomplete="email"
             [pattern]="emailPattern" required />
           <label>Email</label>
         </p-floatlabel>
-        <div class="w-100 mt-4 d-flex gap-4">
+        <div class="w-100 mt-4 d-flex gap-2">
           <p-floatlabel>
             <input type="text" class="text-uppercase w-100" pInputText [(ngModel)]="currentUser.groupCode" minlength="7"
               maxlength="7" required />
             <label>Cod grup</label>
           </p-floatlabel>
-          <button pButton type="button" (click)="saveUserData()"
+          <button pButton type="button" (click)="saveUserData()" style="min-width: fit-content;"
             [disabled]="currentUser.fullname.length < 3 || !currentUser.email.match(emailPattern) || currentUser.groupCode.length < 6">
             <span pButtonLabel>Continuă</span>
             <i pButtonIcon class="pi pi-chevron-circle-right"></i>

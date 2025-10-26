@@ -5,11 +5,11 @@ import emailjs from '@emailjs/browser';
 import { getAI, getGenerativeModel } from '@firebase/ai';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/database';
+import { ConfirmationService } from 'primeng/api';
+import { Badge } from "primeng/badge";
 import { PrimengModule } from 'src/primeng';
 import { emailjsConfig } from './configs/emailjs-config';
 import { firebaseConfig } from './configs/firebase-config';
-import { Badge } from "primeng/badge";
-import { ConfirmationService } from 'primeng/api';
 
 @Component({
   selector: 'app-root',
@@ -39,6 +39,7 @@ export class AppComponent implements OnInit {
   wishes: any[] = [];
   newItemName = '';
   darkMode: string = 'disabled';
+  isMobile: boolean = (typeof navigator !== 'undefined') && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
   isSavingUser = false;
   isSavingItem = false;

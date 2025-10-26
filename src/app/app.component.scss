@@ -166,7 +166,7 @@
   align-self: flex-end;
 }
 
-.form {
+.user-form {
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -182,7 +182,7 @@
 }
 
 .person-img {
-  width: 100px;
+  width: 140px;
   height: 174px;
   margin-block: 1.5rem;
 
@@ -261,6 +261,10 @@
     animation: slide-in 0.25s ease forwards;
   }
 
+  .title {
+    margin-bottom: 2rem;
+  }
+
   @keyframes slide-in {
     0% {
       scale: 0.9;
@@ -289,6 +293,14 @@
     ::ng-deep .p-card-body {
       padding: 1.5rem 0.75rem !important;
     }
+  }
+
+  .person-img {
+    width: 80px !important;
+  }
+
+  .title {
+    margin-bottom: 0.75rem;
   }
 
   .data-item {
