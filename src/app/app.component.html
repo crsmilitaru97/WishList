@@ -1,80 +1,176 @@
-<p-button icon="pi pi-moon" class="dark-mode-toggle" severity="secondary" (click)="toggleDarkMode()"></p-button>
-
 <div class="page">
-  <p-card *ngIf="!nameDialogVisible">
-    <div class="title m-2 mb-4">
-      <i class="pi pi-gift"></i>
-      <h2 class="m-0">WishList</h2>
+  @if(!userDialogVisible) {
+  <p-card>
+    <div class="title mb-4">
+      <div class="logo">
+        <img class="logo-img" src="assets/icons/Gift.webp" />
+        <h3 class="m-0">WishList</h3>
+      </div>
+      <div style="flex-grow: 1;"></div>
+      <div class="tags">
+        <p-tag class="tag" (click)="groupPopover.toggle($event)" [value]="currentUser.groupCode | uppercase"
+          severity="info">
+          <img class="small-img" src="assets/icons/Group.webp" />
+        </p-tag>
+        <p-popover #groupPopover>
+          <ng-template #content>
+            <button pButton label="Deconectare" (click)="disconnectUser()" severity="danger"></button>
+          </ng-template>
+        </p-popover>
+        <p-tag class="tag" (click)="userPopover.toggle($event)" [value]="currentUser.fullname" severity="success">
+          <img class="small-img" src="assets/icons/User.webp" />
+        </p-tag>
+        <p-popover #userPopover>
+          <ng-template #content>
+            <button pButton label="Deconectare" (click)="disconnectUser()" severity="danger"></button>
+          </ng-template>
+        </p-popover>
+      </div>
+      <p-button severity="secondary" (click)="toggleDarkMode()">
+        @if (darkMode === 'enabled') {
+        <img class="small-img" src="assets/icons/Sun.webp" />
+        }
+        @if (darkMode === 'disabled') {
+        <img class="small-img" src="assets/icons/Moon.webp" />
+        }
+      </p-button>
     </div>
 
     <p-tabs [(value)]="selectedTab" class="h-100">
+      @if(!isLoadingItems) {
       <p-tablist>
-        <p-tab value="0">Disponibile</p-tab>
+        <p-tab value="0">Disponibile
+          <p-badge [value]="getFilteredItems('0').length"></p-badge>
+        </p-tab>
         <p-tab value="1">Personale</p-tab>
+        <div style="flex-grow: 1;"></div>
         <p-tab value="2">Luate</p-tab>
       </p-tablist>
       <p-tabpanels class="p-0">
-        <p-table class="itemsTable" [value]="getFilteredItems()" scrollable="true">
-          <ng-template pTemplate="header" let-item>
-            <tr>
-              <th style="width: 85%;">Dorință</th>
-              <th style="width: 15%;">Pentru</th>
-              <th *ngIf="selectedTab == '1'" style="min-width: 148px;">Acțiuni</th>
-              <th *ngIf="selectedTab == '0'" style="min-width: 148px;">Status</th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-item>
-            <tr>
-              <td>{{ item.name }}</td>
-              <td>{{ item.user }}</td>
-              <td *ngIf="item.status != 'Done'" style="min-width: 148px;" class="text-center">
-                <p-select *ngIf="item.user != name" [options]="statusOptions" [(ngModel)]="item.status"
-                  (onChange)="updateStatus(item)" placeholder="Selectează status" appendTo="body"
-                  [ngStyle]="{'min-width': '115px'}" [disabled]="item.status == 'Pending' && item.statusBy != name">
+        <p-dataView class="itemsList" [value]="getFilteredItems(selectedTab)" layout="list" selecti>
+          <ng-template #list let-items>
+            @for (item of items; track item.name) {
+            <div class="data-item p-3 d-flex align-items-center justify-content-between">
+              <div class="data-main">
+                @if(selectedTab == '0') {
+                <div class="item-user text-muted small">{{ item.userFullname || 'Cineva neînregistrat' }} ar vrea:</div>
+                }
+                @if(selectedTab == '2') {
+                <div class="item-user text-muted small">{{ item.userFullname || 'Cineva neînregistrat' }} a primit:
+                </div>
+                }
+                <div class="item-name fw-semibold">{{ item.name }}</div>
+              </div>
+
+              <div class="data-actions">
+                @if (selectedTab=='0') {
+                @if (item.status == 'pending' && item.statusBy != currentUser.username) {
+                <span class="status-badge">Ocupat de {{ item.statusByFullname }}</span>
+                }
+                @else {
+                <p-select [options]="statusOptions" [ngModel]="item.status"
+                  (onChange)="updateStatus(item, $event.value)" appendTo="body" [ngStyle]="{'min-width': '150px'}">
                 </p-select>
-                <button *ngIf="item.user == name" class="p-button-danger" pButton icon="pi pi-trash"
-                  (click)="deleteItem(item)"></button>
-              </td>
-            </tr>
+                }
+                }
+                @if (selectedTab=='1') {
+                <button class="p-button-danger" pButton icon="pi pi-trash" (click)="deleteItem(item)"></button>
+                }
+                @if (selectedTab=='2') {
+                {{ item.statusDate | date:'dd.MM.yyyy' }}
+                }
+              </div>
+            </div>
+            }
           </ng-template>
-          <ng-template pTemplate="emptymessage">
-            <tr>
-              <td colspan="3" class="text-center p-4">Încă nu au fost adăugate cadouri :)</td>
-            </tr>
+
+          <ng-template #emptymessage class="text-center">
+            @if (selectedTab=='0') {
+            <img class="empty-img" src="assets/icons/Shrugging.gif" />
+            <div>Încă nu au fost adăugate dorințe</div>
+            }
+            @if (selectedTab=='1') {
+            <img class="empty-img" src="assets/icons/Shrugging.gif" />
+            <div>Încă nu ai adăugat dorințele tale</div>
+            }
+            @if (selectedTab=='2') {
+            <img class="empty-img" src="assets/icons/Shrugging.gif" />
+            <div>Încă nu au fost luate dorințe</div>
+            }
           </ng-template>
-        </p-table>
+        </p-dataView>
       </p-tabpanels>
+      }
+      @else {
+      <div class="loading-overlay">
+        <p-progress-spinner />
+      </div>
+      }
     </p-tabs>
 
-    <button class="mt-4 addItemsButton" pButton label="Adaugă" icon="pi pi-plus" (click)="showDialog()"></button>
+    <div class="w-100 d-flex justify-content-end">
+      <button class="mt-4 addItemsButton" pButton label="Adaugă dorința ta" icon="pi pi-plus"
+        (click)="showAddDialog()"></button>
+    </div>
   </p-card>
+  }
 
-  <p-dialog styleClass="dialog" header="Adaugă o dorință" [(visible)]="displayDialog" [modal]="true" [closable]="true"
-    position="top" [draggable]="false">
+  <p-dialog styleClass="dialog" header="Adaugă o dorință" [(visible)]="addDialogVisible" [modal]="true"
+    [resizable]="false" [closable]="true" [draggable]="false">
     <div class="mt-4 mb-2">
       <p-floatlabel class="w-100">
-        <input #inputGift class="w-100" type="text" pInputText minlength="2" [(ngModel)]="newItemName"
-          placeholder="Scrie ce iți dorești..." focusOnShow required />
+        <textarea #inputGift pTextarea class="w-100" minlength="3" [(ngModel)]="newItemName"
+          placeholder="Scrie ce iți dorești..." focusOnShow required></textarea>
       </p-floatlabel>
     </div>
     <ng-template #footer>
-      <button pButton label="Adaugă" icon="pi pi-check" (click)="addItem()"
-        [disabled]="inputGift.value.length <= 2"></button>
+      <button pButton label="Adaugă" icon="pi pi-check" type="submit" (click)="saveItem()"
+        [disabled]="inputGift.value.length < 3"></button>
     </ng-template>
+
+    @if (isSavingItem) {
+    <div class="loading-overlay">
+      <p-progress-spinner />
+    </div>
+    }
   </p-dialog>
 
-  <p-dialog styleClass="dialog" header="Introdu numele tău" [(visible)]="nameDialogVisible" [modal]="true"
-    [closable]="false" position="top" [draggable]="false">
-    <div class="mt-4 mb-2">
-      <p-floatlabel class="w-100">
-        <input #inputName class="w-100" type=" text" pInputText minlength="2" [(ngModel)]="name" focusOnShow required />
-        <label>Nume...</label>
-      </p-floatlabel>
+  <p-dialog styleClass="dialog" header="Cine ești?" [(visible)]="userDialogVisible" [modal]="true" [closable]="false"
+    [draggable]="false" [resizable]="false" [focusOnShow]="false">
+    <div class="user-dialog-content">
+      <img class="person-img" src="assets/icons/Person.gif" />
+      <div class="form">
+        <p-floatlabel class="w-100">
+          <input class="w-100" type="text" pInputText minlength="3" [(ngModel)]="currentUser.fullname"
+            autocomplete="username" autofocus required />
+          <label>Nume</label>
+        </p-floatlabel>
+        <p-floatlabel class="w-100 mt-4">
+          <input class="w-100" type="text" pInputText [(ngModel)]="currentUser.email" autocomplete="email"
+            [pattern]="emailPattern" required />
+          <label>Email</label>
+        </p-floatlabel>
+        <div class="w-100 mt-4 d-flex gap-4">
+          <p-floatlabel>
+            <input type="text" class="text-uppercase w-100" pInputText [(ngModel)]="currentUser.groupCode" minlength="7"
+              maxlength="7" required />
+            <label>Cod grup</label>
+          </p-floatlabel>
+          <button pButton type="button" (click)="saveUserData()"
+            [disabled]="currentUser.fullname.length < 3 || !currentUser.email.match(emailPattern) || currentUser.groupCode.length < 6">
+            <span pButtonLabel>Continuă</span>
+            <i pButtonIcon class="pi pi-chevron-circle-right"></i>
+          </button>
+        </div>
+      </div>
     </div>
 
-    <ng-template #footer>
-      <button pButton type="button" label="Continuă" icon="pi pi-check" (click)="onEnterName()"
-        [disabled]="inputName.value.length <= 2"></button>
-    </ng-template>
+    @if (isSavingUser) {
+    <div class="loading-overlay">
+      <p-progress-spinner />
+    </div>
+    }
   </p-dialog>
 </div>
+
+<p-confirmDialog></p-confirmDialog>

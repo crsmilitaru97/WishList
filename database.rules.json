@@ -1,6 +1,11 @@
 {
   "rules": {
-    ".read": "now < 1737496800000",  // 2025-1-22
-    ".write": "now < 1737496800000",  // 2025-1-22
+    ".read": "true",
+    ".write": "true",
+    "users": {
+      ".indexOn": [
+        "groupCode"
+      ]
+    }
   }
 }

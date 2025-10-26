@@ -1,5 +1,65 @@
+:root {
+  --z-overlay: 10;
+  --z-content: 20;
+
+  --p-card-background: rgba(255, 255, 255, 0.8) !important;
+  --p-tabs-tablist-background: rgba(255, 255, 255, 0.4) !important;
+  --p-tabs-tabpanel-background: rgba(255, 255, 255, 0.2) !important;
+  --p-datatable-header-cell-background: rgba(255, 255, 255, 0.1) !important;
+  --p-datatable-row-background: rgba(255, 255, 255, 0.2) !important;
+  --p-dataview-content-background: rgba(255, 255, 255, 0.1) !important;
+  --p-tab-hover-background: rgba(0, 0, 0, 0.025) !important;
+  --status-badge-bg: rgba(0, 0, 0, 0.04);
+  --status-badge-border: rgba(0, 0, 0, 0.06);
+  --status-badge-color: #111827;
+}
+
+.app-dark {
+  --p-card-background: rgba(0, 0, 0, 0.8) !important;
+  --p-tabs-tablist-background: rgba(0, 0, 0, 0.4) !important;
+  --p-tabs-tabpanel-background: rgba(0, 0, 0, 0.2) !important;
+  --p-datatable-header-cell-background: rgba(0, 0, 0, 0.1) !important;
+  --p-datatable-row-background: rgba(0, 0, 0, 0.2) !important;
+  --p-dataview-content-background: rgba(0, 0, 0, 0.1) !important;
+  --bs-secondary-color: #929eaa !important;
+  --p-tabs-tablist-border-color: rgba(255, 255, 255, 0.1) !important;
+  --p-tabs-tab-border-color: rgba(255, 255, 255, 0.1) !important;
+  --p-tab-hover-background: rgba(255, 255, 255, 0.025) !important;
+  --status-badge-bg: rgba(255, 255, 255, 0.04);
+  --status-badge-border: rgba(255, 255, 255, 0.06);
+  --status-badge-color: #f8fafc;
+}
+
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+html {
+  background-color: var(--ground-background, var(--bs-body-bg, #f3f4f6)) !important;
+}
+
 body {
-  background-color: var(--ground-background) !important;
+  height: 100dvh;
+  min-height: 100dvh;
+  width: 100vw;
+  overflow: hidden;
+  position: relative;
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-smooth: always;
+}
+
+.app-dark body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  z-index: var(--z-overlay);
 }
 
 .page {
@@ -9,80 +69,13 @@ body {
   justify-content: center;
   width: 100vw;
   height: 100vh;
+  position: relative;
+  z-index: var(--z-content);
+  box-sizing: border-box;
 }
 
-@media (min-width: 1024px) {
-  p-card {
-    width: 60%;
-    height: 80%;
-  }
-
-  .dialog {
-    width: 25%;
-  }
-}
-
-@media (max-width: 1024px) {
-  p-card {
-    width: 100%;
-    height: 100%;
-  }
-
-  .dialog {
-    width: 100%;
-  }
-
-  .p-card-content {
-    justify-content: start !important;
-  }
-
-  .p-card-body {
-    padding-inline: 0.4rem !important;
-  }
-}
-
-.p-card {
-  height: 100%;
-  width: 100%;
-  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.1) !important;
-
-  .p-card-body {
-    height: 100%;
-    width: 100%;
-
-    .p-card-content {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-      justify-content: space-between;
-    }
-  }
-}
-
-.p-dialog {
-  position: absolute;
-  top: 10%;
-}
-
-.p-datatable {
-  height: 100%;
-
-  .p-datatable-table-container {
-    overflow: auto;
-    height: 100%;
-  }
-
-  .p-datatable-tbody {
-    overflow: auto;
-    height: 24%;
-  }
-}
-
-
-/* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 20px;
+  width: 10px;
 }
 
 ::-webkit-scrollbar-track {
@@ -92,10 +85,31 @@ body {
 ::-webkit-scrollbar-thumb {
   background-color: var(--p-datatable-header-cell-background);
   border-radius: 20px;
-  border: 6px solid transparent;
+  border: 3px solid transparent;
   background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background-color: var(--p-form-field-disabled-background);
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@media (max-width: 1000px) {
+  .p-dialog {
+    position: absolute;
+    top: 5%;
+  }
 }
