@@ -197,7 +197,7 @@ export class AppComponent implements OnInit {
       email: this.currentUser.email.trim(),
       fullname: this.currentUser.fullname.trim(),
       groupCode: this.currentUser.groupCode.trim().toLowerCase(),
-      username: this.currentUser.email.trim().split('@')[0].toLowerCase()
+      username: this.currentUser.email.trim().split('@')[0].replace(/[^a-z0-9]/g, '').toLowerCase()
     }
     const ref = this.db.ref('users');
     ref.child(this.currentUser.username).set(this.currentUser).then(() => {
