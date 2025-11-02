@@ -1,11 +1,6 @@
 {
   "rules": {
     ".read": "true",
-    ".write": "true",
-    "users": {
-      ".indexOn": [
-        "groupCode"
-      ]
-    }
+    ".write": "true"
   }
 }

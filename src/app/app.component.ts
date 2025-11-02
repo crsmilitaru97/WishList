@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { LinkifyPipe } from '@crsx/linkify';
 import emailjs from '@emailjs/browser';
 import { getAI, getGenerativeModel } from '@firebase/ai';
 import firebase from 'firebase/compat/app';
@@ -14,13 +15,14 @@ import { firebaseConfig } from './configs/firebase-config';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, FormsModule, PrimengModule, Badge],
+  imports: [CommonModule, FormsModule, PrimengModule, Badge, LinkifyPipe],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
   db!: firebase.database.Database;
   userDialogVisible = false;
+  groupDialogVisible = false;
   addDialogVisible = false;
   statusOptions = [
     { label: 'Disponibil', value: 'new' },
@@ -33,12 +35,16 @@ export class AppComponent implements OnInit {
     username: '',
     email: '',
     fullname: '',
-    groupCode: ''
+    latestGroupCode: ''
   };
-  groupUsers: any[] = [];
+  currentGroupCode = '';
+  newGroupCode = '';
+  userGroups: any[] = [];
+  groupMembers: any[] = [];
   wishes: any[] = [];
   newItemName = '';
   darkMode: string = 'disabled';
+  faceIcons: string[] = ['Grinning.webp', 'GrinningEyesClosed.webp', 'Smiling.webp', 'SmilingEyesClosed.webp', 'Winking.webp'];
   isMobile: boolean = (typeof navigator !== 'undefined') && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
   isSavingUser = false;
@@ -49,7 +55,7 @@ export class AppComponent implements OnInit {
     private confirmationService: ConfirmationService
   ) { }
 
-  ngOnInit() {
+  async ngOnInit(): Promise<void> {
     this.initializeFirebase();
     this.darkMode = localStorage.getItem('darkMode') || 'disabled';
     if (this.darkMode === 'enabled') {
@@ -58,7 +64,7 @@ export class AppComponent implements OnInit {
 
     this.currentUser.username = localStorage.getItem('username')!;
     if (this.currentUser.username) {
-      this.loadUserFromDatabase();
+      await this.loadAllData(true);
     } else {
       this.userDialogVisible = true;
     }
@@ -71,9 +77,9 @@ export class AppComponent implements OnInit {
     this.db = firebase.database();
   }
 
-  loadItems() {
-    const itemsRef = this.db.ref('wishes').child(this.currentUser.groupCode);
-    itemsRef.once('value').then((snapshot: any) => {
+  getWishes(groupCode: string): Promise<void> {
+    const itemsRef = this.db.ref('wishes').child(groupCode);
+    return itemsRef.once('value').then((snapshot: any) => {
       const items = snapshot.val();
       if (items) {
         this.wishes = Object.keys(items).map(key => ({
@@ -82,18 +88,23 @@ export class AppComponent implements OnInit {
           username: items[key].username,
           statusBy: items[key].statusBy,
           status: items[key].username == this.currentUser.username ? '-' : items[key].status,
-          statusByFullname: this.groupUsers.find(u => u.username === items[key].statusBy)?.fullname,
+          statusByFullname: this.groupMembers.find(u => u.username === items[key].statusBy)?.fullname,
           date: items[key].date,
           statusDate: items[key].statusDate,
-          userFullname: this.groupUsers.find(u => u.username === items[key].username)?.fullname
+          userFullname: this.groupMembers.find(u => u.username === items[key].username)?.fullname
         }));
       } else {
         this.wishes = [];
       }
-    }).catch((error: any) => this.showError('Error loading items from Firebase: ', error))
+    }).catch((error: any) => this.showError('Eroare la încărcarea dorințelor: ', error))
       .finally(() => {
         this.isLoadingItems = false;
       });
+  }
+
+  private getRandomItem<T>(list: T[]): T {
+    const randomIndex = Math.floor(Math.random() * list.length);
+    return list[randomIndex];
   }
 
   showAddDialog() {
@@ -129,13 +140,13 @@ export class AppComponent implements OnInit {
     item.status = status;
     item.statusBy = this.currentUser.username;
     item.statusDate = new Date().toISOString();
-    const itemRef = this.db.ref('wishes').child(this.currentUser.groupCode).child(item.id);
+    const itemRef = this.db.ref('wishes').child(this.currentGroupCode).child(item.id);
     itemRef.update({
       status: item.status,
       statusBy: this.currentUser.username,
       statusDate: item.statusDate
     }).then(() => {
-    }).catch((error: any) => this.showError('Error finalizing item status in Realtime Database: ', error));
+    }).catch((error: any) => this.showError('Eroare la schimbarea statusului dorinței: ', error));
   }
 
   getFilteredItems(tab: string) {
@@ -157,7 +168,7 @@ export class AppComponent implements OnInit {
     }
   }
 
-  saveItem() {
+  saveWish() {
     if (this.newItemName.trim()) {
       const newItem = {
         name: this.newItemName.trim(),
@@ -166,14 +177,14 @@ export class AppComponent implements OnInit {
         date: new Date().toISOString()
       };
       this.isSavingItem = true;
-      const itemsRef = this.db.ref('wishes').child(this.currentUser.groupCode);
+      const itemsRef = this.db.ref('wishes').child(this.currentGroupCode);
       const newItemRef = itemsRef.push(newItem);
       newItemRef.then(() => {
         const item = { ...newItem, id: newItemRef.key, userFullname: this.currentUser.fullname };
         this.wishes.push(item);
         this.sendMail(item);
         this.addDialogVisible = false;
-      }).catch((error: any) => this.showError('Error adding item to Realtime Database: ', error))
+      }).catch((error: any) => this.showError('Eroare la adăugarea dorinței: ', error))
         .finally(() => {
           this.isSavingItem = false;
         });
@@ -182,32 +193,58 @@ export class AppComponent implements OnInit {
     }
   }
 
-  deleteItem(item: any) {
-    const itemRef = this.db.ref('wishes').child(this.currentUser.groupCode).child(item.id);
-    itemRef.remove().then(() => {
-      this.wishes = this.wishes.filter((i: any) => i.id !== item.id);
+  deleteWish(wish: any) {
+    this.confirmationService.confirm({
+      header: 'Confirmare ștergere',
+      message: `Ești sigur că vrei să ștergi dorința: <strong>${wish.name}</strong>?`,
+      acceptLabel: 'Da, șterge',
+      rejectLabel: 'Nu, anulază',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-secondary',
+      accept: () => {
+        this.finalizeDeleteWish(wish);
+      }
+    });
+  }
+
+  private finalizeDeleteWish(wish: any) {
+    const wishRef = this.db.ref('wishes').child(this.currentGroupCode).child(wish.id);
+    wishRef.remove().then(() => {
+      this.wishes = this.wishes.filter((i: any) => i.id !== wish.id);
     }).catch((error: any) => {
-      this.showError('Error deleting item from Firebase: ', error);
+      this.showError('Eroare la ștergerea dorinței: ', error);
     });
   }
 
   saveUserData() {
     this.isSavingUser = true;
+    this.currentGroupCode = this.currentGroupCode.trim().toLowerCase();
     this.currentUser = {
       email: this.currentUser.email.trim(),
       fullname: this.currentUser.fullname.trim(),
-      groupCode: this.currentUser.groupCode.trim().toLowerCase(),
-      username: this.currentUser.email.trim().split('@')[0].replace(/[^a-z0-9]/g, '').toLowerCase()
+      username: this.currentUser.email.trim().split('@')[0].replace(/[^a-z0-9]/g, '').toLowerCase(),
+      latestGroupCode: this.currentGroupCode
     }
     const ref = this.db.ref('users');
     ref.child(this.currentUser.username).set(this.currentUser).then(() => {
       localStorage.setItem('username', this.currentUser.username);
+      this.addToGroupMembers(this.currentGroupCode, this.currentUser.username);
+      this.loadAllData(false);
       this.userDialogVisible = false;
-      this.getGroupUsers();
-    }).catch((err: any) => this.showError('Error saving user to DB:', err))
+    }).catch((err: any) => this.showError('Eroare la salvarea utilizatorului: ', err))
       .finally(() => {
         this.isSavingUser = false;
       });
+  }
+
+  addToGroupMembers(groupCode: string, username: string) {
+    const membersRef = this.db.ref('groups').child(groupCode).child('members');
+    membersRef.once('value').then((snapshot: any) => {
+      const members = snapshot.val() || {};
+      if (!Object.values(members).includes(username)) {
+        membersRef.push(username).catch((err: any) => this.showError('Eroare la adăugarea membrului în grup: ', err));
+      }
+    });
   }
 
   toggleDarkMode() {
@@ -220,7 +257,7 @@ export class AppComponent implements OnInit {
   async sendMail(item: any) {
     let emailMessage = await this.getAiMessage(item) || '';
 
-    this.groupUsers.filter((u: any) => u.username !== this.currentUser.username).forEach((user: any) => {
+    this.groupMembers.filter((u: any) => u.username !== this.currentUser.username).forEach((user: any) => {
       const templateParams = {
         name: item.userFullname,
         message: emailMessage,
@@ -231,23 +268,47 @@ export class AppComponent implements OnInit {
     });
   }
 
-  getGroupUsers() {
-    this.groupUsers = [];
-    const usersRef = this.db.ref('users').orderByChild('groupCode').equalTo(this.currentUser.groupCode);
-    usersRef.once('value').then((snapshot: any) => {
+  getGroups(username: string): Promise<void> {
+    const groupsRef = this.db.ref('groups');
+    return groupsRef.once('value').then((snapshot: any) => {
+      const groups = snapshot.val();
+      this.userGroups = [];
+      if (groups) {
+        Object.keys(groups).forEach((groupCode: string) => {
+          const members = groups[groupCode].members;
+          if (members) {
+            const memberUsernames = Object.keys(members).map(k => members[k]);
+            if (memberUsernames.includes(username)) {
+              this.userGroups.push({ groupCode });
+            }
+          }
+        });
+      }
+    });
+  }
+
+  getGroupMembers(groupCode: string): Promise<void> {
+    this.groupMembers = [];
+    const membersRef = this.db.ref('groups').child(groupCode).child('members');
+    return membersRef.once('value').then(async (snapshot: any) => {
       const data = snapshot.val();
       if (data) {
-        Object.keys(data).forEach(key => {
-          this.groupUsers.push({
-            email: data[key].email,
-            fullname: data[key].fullname,
-            groupCode: data[key].groupCode,
-            username: key
-          });
+        const usernames = Object.keys(data).map(k => data[k]);
+        const profilePromises = usernames.map((u: string) => this.db.ref('users').child(u).once('value'));
+        const snapshots = await Promise.all(profilePromises);
+        snapshots.forEach((s: any, idx: number) => {
+          const profile = s.val();
+          if (profile) {
+            this.groupMembers.push({
+              email: profile.email,
+              fullname: profile.fullname,
+              username: profile.username || usernames[idx],
+              faceIcon: this.getRandomItem(this.faceIcons)
+            });
+          }
         });
-        this.loadItems();
       }
-    }).catch((error: any) => this.showError('Error loading group users from Firebase: ', error));
+    }).catch((error: any) => this.showError('Eroare la încărcarea utilizatorilor din grup: ', error));
   }
 
   async getAiMessage(item: any) {
@@ -259,32 +320,76 @@ export class AppComponent implements OnInit {
     return text;
   }
 
-  loadUserFromDatabase() {
+  getUser(): Promise<void> {
     this.isLoadingItems = true;
     const userRef = this.db.ref('users').child(this.currentUser.username);
-    userRef.once('value').then((snapshot: any) => {
+    return userRef.once('value').then((snapshot: any) => {
       if (snapshot.val()) {
         this.currentUser = { ...this.currentUser, ...snapshot.val() };
-        this.getGroupUsers();
+        this.currentGroupCode = this.currentUser.latestGroupCode || this.currentGroupCode;
       } else {
         this.isLoadingItems = false;
         this.userDialogVisible = true;
       }
-    }).catch((error: any) => this.showError('Error loading user from Firebase: ', error));
+    }).catch((error: any) => this.showError('Eroare la încărcarea utilizatorului: ', error));
   }
 
   private showError(message: string, error: any) {
     this.confirmationService.confirm({
       header: 'Eroare',
-      message: message + (error.message || error),
+      message: `${message} <br> ${error.message || error}`,
       acceptLabel: 'OK',
       acceptButtonStyleClass: 'p-button-secondary',
       rejectVisible: false
     });
+
+    this.isLoadingItems = false;
+    this.isSavingItem = false;
+    this.isSavingUser = false;
+  }
+
+  async loadAllData(loadUser: boolean): Promise<void> {
+    try {
+      if (loadUser) {
+        await this.getUser();
+      }
+      await this.getGroups(this.currentUser.username);
+      await this.getGroupMembers(this.currentGroupCode);
+      await this.getWishes(this.currentGroupCode);
+    } catch (error) {
+      this.showError('Eroare la încărcarea datelor: ', error);
+    }
   }
 
   disconnectUser() {
     localStorage.removeItem('username');
     location.reload();
+  }
+
+  showChangeGroupDialog() {
+    this.newGroupCode = '';
+    this.groupDialogVisible = true;
+  }
+
+  changeGroup() {
+    this.currentGroupCode = this.newGroupCode;
+
+    const userRef = this.db.ref('users').child(this.currentUser.username);
+    userRef.update({ latestGroupCode: this.currentGroupCode })
+      .catch((err: any) => this.showError('Eroare la salvarea grupului utilizatorului: ', err));
+
+    this.addToGroupMembers(this.currentGroupCode, this.currentUser.username);
+
+    this.loadAllData(false);
+    this.groupDialogVisible = false;
+  }
+
+  selectUserGroup(groupCode: string) {
+    this.newGroupCode = groupCode;
+    this.changeGroup();
+  }
+
+  isItemDeletable(item: any): boolean {
+    return !!item.date && (Date.now() - new Date(item.date).getTime()) < 30 * 24 * 60 * 60 * 1000;
   }
 }

@@ -4,6 +4,7 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
   gap: 0.25rem;
   width: 100%;
 
@@ -26,12 +27,16 @@
         font-size: 1rem;
         line-height: 1.2;
         overflow-wrap: anywhere;
-      }
 
-      .item-user {
-        color: rgba(0, 0, 0, 0.55);
-        font-size: 0.85rem;
-        user-select: none;
+        ::ng-deep a.linkify {
+          display: inline-block;
+          text-decoration: none;
+
+          max-width: 100%;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
       }
     }
 
@@ -78,9 +83,11 @@
     height: 100%;
     min-height: 0;
     overflow: auto;
+    -webkit-overflow-scrolling: touch;
 
     .p-datatable-tbody {
       overflow: auto;
+      -webkit-overflow-scrolling: touch;
       height: 100%;
     }
   }
@@ -98,33 +105,36 @@
   flex-direction: row;
   gap: 12px;
   align-items: center;
+}
 
-  .logo {
-    display: flex;
-    align-items: center;
-    user-select: none;
-  }
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-content: flex-end;
+  user-select: none;
 
-  .tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    justify-content: flex-end;
-    user-select: none;
+  .tag {
+    padding: 0.4rem;
+    cursor: pointer;
 
-    .tag {
-      padding: 0.4rem;
-      cursor: pointer;
-
-      &:hover {
-        filter: brightness(0.95);
-      }
+    &:hover {
+      filter: brightness(0.95);
     }
   }
+}
 
-  .pi {
-    margin-top: 2px;
-    font-size: 2.2rem;
+.members {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  .member {
+    display: flex;
+    align-items: center;
+    border-radius: 1rem;
+    box-shadow: var(--member-shadow);
+    padding: 10px;
   }
 }
 
@@ -133,6 +143,14 @@
   height: 20px;
   object-fit: contain;
   display: inline-block;
+}
+
+.inline-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .logo {
@@ -145,6 +163,34 @@
     height: 45px;
     object-fit: contain;
     display: inline-block;
+  }
+
+  &:hover {
+    img {
+      animation: jump-wave 1s ease-in-out;
+
+      @keyframes jump-wave {
+        0% {
+          transform: translateY(0) rotate(0deg);
+        }
+
+        25% {
+          transform: translateY(-10px) rotate(15deg);
+        }
+
+        50% {
+          transform: translateY(0) rotate(0deg);
+        }
+
+        75% {
+          transform: translateY(-10px) rotate(-15deg);
+        }
+
+        100% {
+          transform: translateY(0) rotate(0deg);
+        }
+      }
+    }
   }
 }
 
@@ -253,6 +299,19 @@
   }
 }
 
+.group-img {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  display: inline-block;
+}
+
+[aria-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
 
 @media (min-width: 1001px) {
   .p-card {
@@ -260,6 +319,11 @@
     height: 80%;
     margin: 2rem auto;
     animation: slide-in 0.25s ease forwards;
+    max-height: 800px;
+
+    ::ng-deep .p-card-body {
+      padding: 2rem !important;
+    }
   }
 
   .title {
@@ -292,7 +356,7 @@
     max-width: none;
 
     ::ng-deep .p-card-body {
-      padding: 1.5rem 0.75rem !important;
+      padding: 0.5rem !important;
     }
   }
 

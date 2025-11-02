@@ -1,9 +1,18 @@
-# WishList
+# 🎁 WishList
 
-A wishlist app that lets users add desired gifts. These wishes are visible to others, who can update the status of the gifts without revealing their plans to the recipient. The labels are in Romanian.
+A small personal wishlist app designed for private groups. Users can add wishes and mark them as reserved or bought, without the receiver’s knowledge. The interface is available only in Romanian language.
 
-## Getting started
+## Features
 
-To launch the app:
-1. Ensure you have a `firebase-config.ts` file in place
-2. Run the following command: `ng serve`
+- User authentication with username and email
+- Group management: create and join multiple groups using group codes
+- Wishlist management: add and delete wishes
+- Reservation system: mark wishes as reserved or bought
+- Email notifications when a wish is added, including AI‑generated descriptions and suggestions
+- Light and dark themes, with fancy UI :)
+
+## Tech stack
+
+- Angular with PrimeNG UI
+- Firebase Realtime Database, Authentication and AI Logic
+- EmailJS for email notifications

@@ -4,17 +4,25 @@
     <div class="title">
       <div class="logo">
         <img class="logo-img" src="assets/icons/Gift.webp" />
-        <h3 class="m-0">WishList</h3>
+        <h3 class="m-0 user-select-none">WishList</h3>
       </div>
       <div style="flex-grow: 1;"></div>
       <div class="tags">
-        <p-tag class="tag" (click)="groupPopover.toggle($event)" [value]="currentUser.groupCode | uppercase"
-          severity="info">
+        <p-tag class="tag" (click)="groupPopover.toggle($event)" [value]="currentGroupCode | uppercase" severity="info">
           <img class="small-img" src="assets/icons/Group.webp" />
         </p-tag>
         <p-popover #groupPopover>
           <ng-template #content>
-            <button pButton label="Deconectare" (click)="disconnectUser()" severity="danger"></button>
+            <div class="members mb-4">
+              @for (member of groupMembers; track member.email) {
+              <div class="member">
+                <img class="small-img me-2" src="assets/icons/{{ member.faceIcon }}" />
+                <strong>{{ member.fullname }}</strong>
+              </div>
+              }
+            </div>
+            <button pButton label="Schimbă grupul" (click)="showChangeGroupDialog(); groupPopover.hide()"
+              severity="warn"></button>
           </ng-template>
         </p-popover>
         <p-tag class="tag" (click)="userPopover.toggle($event)" [value]="currentUser.fullname" severity="success">
@@ -47,19 +55,30 @@
         <p-tab value="2">Luate</p-tab>
       </p-tablist>
       <p-tabpanels class="p-0">
-        <p-dataView class="itemsList" [value]="getFilteredItems(selectedTab)" layout="list" selecti>
+        @if(selectedTab == '1') {
+        <span class="d-flex align-items-center m-2 text-muted small">
+          <i class="pi pi-info-circle ms-1"></i>
+          <p class="m-0 ms-2">Aici apar dorințele tale. Statusul lor nu va fi vizibil pentru tine 😉. Le poți șterge
+            doar pe cele din ultimele 30 de zile.</p>
+        </span>
+        }
+        <p-dataView class="itemsList" [value]="getFilteredItems(selectedTab)" layout="list">
           <ng-template #list let-items>
             @for (item of items; track item.name) {
             <div class="data-item p-3 d-flex align-items-center justify-content-between">
               <div class="data-main">
                 @if(selectedTab == '0') {
-                <div class="item-user text-muted small">{{ item.userFullname || 'Cineva neînregistrat' }} ar vrea:</div>
-                }
-                @if(selectedTab == '2') {
-                <div class="item-user text-muted small">{{ item.userFullname || 'Cineva neînregistrat' }} a primit:
+                <div class="text-muted small" [innerHTML]="(item.userFullname || '<i>Anonim</i>') + ' ar vrea:'">
                 </div>
                 }
-                <div class="item-name fw-semibold">{{ item.name }}</div>
+                @if(selectedTab == '1') {
+                <div class="text-muted small">{{ item.date | date:'dd.MM.yyyy' }}</div>
+                }
+                @if(selectedTab == '2') {
+                <div class="text-muted small" [innerHTML]="(item.userFullname || '<i>Anonim</i>') + ' a primit:'">
+                </div>
+                }
+                <div class="item-name fw-semibold" [innerHTML]="item.name | linkify"></div>
               </div>
 
               <div class="data-actions">
@@ -73,8 +92,8 @@
                 </p-select>
                 }
                 }
-                @if (selectedTab=='1') {
-                <button class="p-button-danger" pButton icon="pi pi-trash" (click)="deleteItem(item)"></button>
+                @if (selectedTab=='1' && isItemDeletable(item)) {
+                <button severity="danger" pButton icon="pi pi-trash" (click)="deleteWish(item)"></button>
                 }
                 @if (selectedTab=='2') {
                 <div class="text-muted small">{{ item.statusDate | date:'dd.MM.yyyy' }}</div>
@@ -114,63 +133,94 @@
     </div>
   </p-card>
   }
+</div>
 
-  <p-dialog styleClass="dialog" header="Adaugă o dorință" [(visible)]="addDialogVisible" [modal]="true"
-    [resizable]="false" [closable]="true" [draggable]="false">
-    <div class="mt-4 mb-2">
+<p-dialog styleClass="dialog" header="Adaugă o dorință" [(visible)]="addDialogVisible" [modal]="true"
+  [resizable]="false" [closable]="true" [draggable]="false">
+  <div class="mt-4 mb-2">
+    <p-floatlabel class="w-100">
+      <textarea pTextarea class="w-100" minlength="3" [(ngModel)]="newItemName" placeholder="Scrie ce iți dorești..."
+        required></textarea>
+    </p-floatlabel>
+  </div>
+  <ng-template #footer>
+    <button pButton label="Adaugă" icon="pi pi-check" type="submit" (click)="saveWish()"
+      [disabled]="newItemName.length < 3"></button>
+  </ng-template>
+
+  @if (isSavingItem) {
+  <div class="loading-overlay">
+    <p-progress-spinner />
+  </div>
+  }
+</p-dialog>
+
+<p-dialog styleClass="dialog" header="Cine ești?" [(visible)]="userDialogVisible" [modal]="true" [closable]="false"
+  [draggable]="false" [resizable]="false" [focusOnShow]="!isMobile">
+  <div class="user-dialog-content">
+    <img class="person-img" src="assets/icons/Person.gif" />
+    <div class="user-form">
       <p-floatlabel class="w-100">
-        <textarea pTextarea class="w-100" minlength="3" [(ngModel)]="newItemName" placeholder="Scrie ce iți dorești..."
-          required></textarea>
+        <input class="w-100" type="text" pInputText minlength="3" [(ngModel)]="currentUser.fullname"
+          autocomplete="given-name" required />
+        <label>Nume</label>
       </p-floatlabel>
-    </div>
-    <ng-template #footer>
-      <button pButton label="Adaugă" icon="pi pi-check" type="submit" (click)="saveItem()"
-        [disabled]="newItemName.length < 3"></button>
-    </ng-template>
-
-    @if (isSavingItem) {
-    <div class="loading-overlay">
-      <p-progress-spinner />
-    </div>
-    }
-  </p-dialog>
-
-  <p-dialog styleClass="dialog" header="Cine ești?" [(visible)]="userDialogVisible" [modal]="true" [closable]="false"
-    [draggable]="false" [resizable]="false" [focusOnShow]="!isMobile">
-    <div class="user-dialog-content">
-      <img class="person-img" src="assets/icons/Person.gif" />
-      <div class="user-form">
-        <p-floatlabel class="w-100">
-          <input class="w-100" type="text" pInputText minlength="3" [(ngModel)]="currentUser.fullname"
-            autocomplete="given-name" required />
-          <label>Nume</label>
+      <p-floatlabel class="w-100 mt-4">
+        <input class="w-100" type="email" pInputText [(ngModel)]="currentUser.email" autocomplete="email"
+          [pattern]="emailPattern" required />
+        <label>Email</label>
+      </p-floatlabel>
+      <div class="w-100 mt-4 d-flex gap-2">
+        <p-floatlabel>
+          <input type="text" class="text-uppercase w-100" pInputText [(ngModel)]="currentGroupCode" minlength="7"
+            maxlength="7" required />
+          <label>Cod grup</label>
         </p-floatlabel>
-        <p-floatlabel class="w-100 mt-4">
-          <input class="w-100" type="email" pInputText [(ngModel)]="currentUser.email" autocomplete="email"
-            [pattern]="emailPattern" required />
-          <label>Email</label>
-        </p-floatlabel>
-        <div class="w-100 mt-4 d-flex gap-2">
-          <p-floatlabel>
-            <input type="text" class="text-uppercase w-100" pInputText [(ngModel)]="currentUser.groupCode" minlength="7"
-              maxlength="7" required />
-            <label>Cod grup</label>
-          </p-floatlabel>
-          <button pButton type="button" (click)="saveUserData()" style="min-width: fit-content;"
-            [disabled]="currentUser.fullname.length < 3 || !currentUser.email.match(emailPattern) || currentUser.groupCode.length < 6">
-            <span pButtonLabel>Continuă</span>
-            <i pButtonIcon class="pi pi-chevron-circle-right"></i>
-          </button>
-        </div>
+        <button pButton type="button" (click)="saveUserData()" style="min-width: fit-content;"
+          [disabled]="currentUser.fullname.length < 3 || !currentUser.email.match(emailPattern) || currentGroupCode.length < 7">
+          <span pButtonLabel>Continuă</span>
+          <i pButtonIcon class="pi pi-chevron-circle-right"></i>
+        </button>
       </div>
     </div>
+  </div>
+</p-dialog>
 
-    @if (isSavingUser) {
-    <div class="loading-overlay">
-      <p-progress-spinner />
-    </div>
+<p-dialog styleClass="dialog" header="Schimbă grupul" [(visible)]="groupDialogVisible" [modal]="true" [closable]="true"
+  [closeOnEscape]="true" [draggable]="false" [resizable]="false">
+  <div> Alege un grup în care ești deja sau introdu un cod nou: </div>
+  <div class="tags justify-content-start mt-2">
+    @for (group of userGroups; track group.groupCode) {
+    <p-tag class="tag" (click)="selectUserGroup(group.groupCode)" severity="info"
+      [ariaDisabled]="group.groupCode === currentGroupCode">
+      <img class="small-img" src="assets/icons/Group.webp" />
+      {{ group.groupCode | uppercase }}
+    </p-tag>
     }
-  </p-dialog>
-</div>
+  </div>
+  <div class="user-dialog-content mt-4">
+    <img class="group-img" src="assets/icons/Group.gif" />
+    <div class="user-form">
+      <p-floatlabel>
+        <input type="text" class="text-uppercase w-100" pInputText [(ngModel)]="newGroupCode" minlength="7"
+          maxlength="7" required />
+        <label>Cod grup</label>
+      </p-floatlabel>
+      <div class="w-100 mt-4 d-flex justify-content-end">
+        <button pButton type="button" (click)="changeGroup()" style="min-width: fit-content;"
+          [disabled]="newGroupCode.length < 7">
+          <span pButtonLabel>Continuă</span>
+          <i pButtonIcon class="pi pi-chevron-circle-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  @if (isLoadingItems) {
+  <div class="loading-overlay">
+    <p-progress-spinner />
+  </div>
+  }
+</p-dialog>
 
 <p-confirmDialog></p-confirmDialog>
