@@ -26,13 +26,14 @@
         font-weight: 600;
         font-size: 1rem;
         line-height: 1.2;
+        min-width: 0;
         overflow-wrap: anywhere;
 
-        ::ng-deep a.linkify {
-          display: inline-block;
+        ::ng-deep .linkify-url {
+          display: block;
           text-decoration: none;
-
-          max-width: 100%;
+          width: 100%;
+          min-width: 0;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;

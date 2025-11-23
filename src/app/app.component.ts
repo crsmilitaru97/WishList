@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LinkifyPipe } from '@crsx/linkify';
 import emailjs from '@emailjs/browser';
-import { getAI, getGenerativeModel } from '@firebase/ai';
+import { GoogleGenAI } from "@google/genai";
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/database';
 import { ConfirmationService } from 'primeng/api';
@@ -11,6 +11,7 @@ import { Badge } from "primeng/badge";
 import { PrimengModule } from 'src/primeng';
 import { emailjsConfig } from './configs/emailjs-config';
 import { firebaseConfig } from './configs/firebase-config';
+import { googleConfigs } from './configs/google-configs';
 
 @Component({
   selector: 'app-root',
@@ -50,6 +51,10 @@ export class AppComponent implements OnInit {
   isSavingUser = false;
   isSavingItem = false;
   isLoadingItems = false;
+
+  private readonly ai = new GoogleGenAI({
+    apiKey: googleConfigs.apiKey
+  });
 
   constructor(
     private confirmationService: ConfirmationService
@@ -264,7 +269,7 @@ export class AppComponent implements OnInit {
         email: user.email
       };
       emailjs.send(emailjsConfig.serviceId, emailjsConfig.templateId, templateParams, emailjsConfig.userId)
-        .catch((err: any) => this.showError('Failed...', err));
+        .catch((err: any) => this.showError('Eroare la trimiterea emailului: ', err));
     });
   }
 
@@ -312,11 +317,12 @@ export class AppComponent implements OnInit {
   }
 
   async getAiMessage(item: any) {
-    const model = getGenerativeModel(getAI(), { model: "gemini-2.5-flash" });
-    const prompt = `Găsește informații relevante despre: ${item.name}. Dacă este posibil, oferă o estimare de preț în lei și alternative similare sau recomandări. Nu repeta numele cadoului dacă nu este necesar.
-      Dacă nu găsești nimic, răspunde cu: "Nu prea s-au găsit informații despre ${item.name}." Fără formatare cu bold și fără întrebări. Fără adresare personală. Maximum 35 de cuvinte.`;
-    const result = await model.generateContent(prompt);
-    const text = `Lui ${item.userFullname} iar plăcea ${item.name}!\n${result.response.text()}`;
+    const response = await this.ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: `Găsește informații relevante despre: ${item.name}. Dacă este posibil, oferă o estimare de preț în lei și alternative similare sau recomandări. Nu repeta numele cadoului dacă nu este necesar.
+      Dacă nu găsești nimic, răspunde cu: "Nu prea s-au găsit informații despre ${item.name}." Fără formatare cu bold și fără întrebări. Fără adresare personală. Maximum 35 de cuvinte.`
+    });
+    const text = `Lui ${item.userFullname} iar plăcea ${item.name}!\n${response.text}`;
     return text;
   }
 
@@ -337,7 +343,7 @@ export class AppComponent implements OnInit {
   private showError(message: string, error: any) {
     this.confirmationService.confirm({
       header: 'Eroare',
-      message: `${message} <br> ${error.message || error}`,
+      message: `${message} <br> ${error?.message || error?.text || error?.error || error}`,
       acceptLabel: 'OK',
       acceptButtonStyleClass: 'p-button-secondary',
       rejectVisible: false

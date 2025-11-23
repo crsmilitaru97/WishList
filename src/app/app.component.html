@@ -78,7 +78,7 @@
                 <div class="text-muted small" [innerHTML]="(item.userFullname || '<i>Anonim</i>') + ' a primit:'">
                 </div>
                 }
-                <div class="item-name fw-semibold" [innerHTML]="item.name | linkify"></div>
+                <div class="item-name fw-semibold" [innerHTML]="item.name | linkify:false:1111"></div>
               </div>
 
               <div class="data-actions">
